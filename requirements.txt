@@ -1,0 +1,17 @@
+flask
+flask-compress
+openpyxl
+pyproj
+pandas
+scipy
+numpy
+requests
+APScheduler==3.10.4
+openai
+matplotlib
+pycryptodome
+python-dotenv
+psycopg2-binary
+smolagents
+selenium
+webdriver-manager

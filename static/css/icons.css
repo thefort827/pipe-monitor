@@ -1,0 +1,281 @@
+/* ============================================
+   管网监测系统 — 新设计系统
+   现代科技感 · 玻璃拟态 · 霓虹发光
+   ============================================ */
+
+/* ---------- 玻璃拟态卡片 ---------- */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: var(--radius-lg);
+}
+
+.glass-card-solid {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+/* ---------- 发光边框 ---------- */
+.glow-border {
+    box-shadow: 0 0 15px var(--accent-primary-glow),
+                inset 0 0 15px rgba(99, 102, 241, 0.05);
+}
+
+.glow-border-success {
+    box-shadow: 0 0 15px var(--color-success-glow);
+}
+
+.glow-border-warning {
+    box-shadow: 0 0 15px var(--color-warning-glow);
+}
+
+.glow-border-danger {
+    box-shadow: 0 0 15px var(--color-danger-glow);
+}
+
+/* ---------- 霓虹文字 ---------- */
+.neon-text {
+    text-shadow: 0 0 10px var(--accent-primary-glow);
+}
+
+.neon-text-success {
+    color: var(--color-success);
+    text-shadow: 0 0 10px var(--color-success-glow);
+}
+
+.neon-text-warning {
+    color: var(--color-warning);
+    text-shadow: 0 0 10px var(--color-warning-glow);
+}
+
+.neon-text-danger {
+    color: var(--color-danger);
+    text-shadow: 0 0 10px var(--color-danger-glow);
+}
+
+/* ---------- 渐变按钮 ---------- */
+.btn-glow {
+    background: linear-gradient(135deg, var(--accent-primary), #818cf8);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-glow:hover {
+    box-shadow: 0 0 20px var(--accent-primary-glow),
+                0 4px 15px rgba(99, 102, 241, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-glow-success {
+    background: linear-gradient(135deg, var(--color-success), #34d399);
+}
+
+.btn-glow-success:hover {
+    box-shadow: 0 0 20px var(--color-success-glow);
+}
+
+.btn-glow-warning {
+    background: linear-gradient(135deg, var(--color-warning), #fbbf24);
+}
+
+.btn-glow-warning:hover {
+    box-shadow: 0 0 20px var(--color-warning-glow);
+}
+
+.btn-glow-danger {
+    background: linear-gradient(135deg, var(--color-danger), #f87171);
+}
+
+.btn-glow-danger:hover {
+    box-shadow: 0 0 20px var(--color-danger-glow);
+}
+
+/* ---------- 深色表单控件 ---------- */
+.form-control-dark {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+}
+
+.form-control-dark:focus {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-soft),
+                0 0 15px var(--accent-primary-glow);
+}
+
+.form-control-dark::placeholder {
+    color: var(--text-muted);
+}
+
+.form-select-dark {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+}
+
+.form-select-dark:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-soft);
+}
+
+/* ---------- 深色表格 ---------- */
+.table-dark-theme {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+}
+
+.table-dark-theme th {
+    background: var(--bg-tertiary);
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-light);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table-dark-theme td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+}
+
+.table-dark-theme tr:last-child td {
+    border-bottom: none;
+}
+
+.table-dark-theme tr:hover td {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+/* ---------- 导航栏底部发光线 ---------- */
+.navbar-glow {
+    position: relative;
+}
+
+.navbar-glow::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--accent-primary) 20%,
+        #818cf8 50%,
+        var(--accent-primary) 80%,
+        transparent 100%
+    );
+    opacity: 0.6;
+}
+
+/* ---------- 区块标题（发光竖条） ---------- */
+.section-title-glow {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.section-title-glow::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--accent-primary), #818cf8);
+    flex-shrink: 0;
+    box-shadow: 0 0 8px var(--accent-primary-glow);
+}
+
+/* ---------- 脉冲动画 ---------- */
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+@keyframes float-up {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-float {
+    animation: float-up 4s ease-in-out infinite;
+}
+
+/* ---------- 渐变分隔线 ---------- */
+.gradient-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-light), transparent);
+    border: none;
+    margin: 1rem 0;
+}
+
+/* ---------- 状态徽章（深色版） ---------- */
+.badge-dark-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--color-success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-dark-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-warning);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-dark-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-dark-info {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--color-info);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* ---------- 滚动条（深色版） ---------- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}

@@ -1,0 +1,62 @@
+# === 敏感配置 ===
+config_secrets.py
+secrets.py
+.env
+.env.local
+.env.production
+
+# === 数据文件 ===
+*.xlsx
+*.xls
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# === 临时/调试文件 ===
+check_db.py
+check_latest.py
+check_readings.py
+check_rows.py
+inspect_db.py
+inspect_db2.py
+create_fresh_db.py
+rebuild_db.py
+rebuild_readings.py
+restore_db.py
+test_fix.py
+test_kcgis_api.py
+test_kcgis_api2.py
+debug_init.py
+db_info.txt
+
+# === Python 缓存 ===
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === 环境 ===
+venv/
+venv311/
+.venv/
+*.log
+
+# === 操作系统 ===
+Thumbs.db
+.DS_Store
+
+# === 备份文件 ===
+*.corrupted
+*.bak
+*.backup

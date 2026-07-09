@@ -1,0 +1,13 @@
+services:
+  pipe-monitor:
+    build: .
+    ports:
+      - "${PORT:-5000}:5000"
+    env_file:
+      - .env
+    volumes:
+      - pipe_device.db:/app/pipe_device.db
+      - app.log:/app/app.log
+      - ./templates:/app/templates
+      - ./static:/app/static
+    restart: unless-stopped

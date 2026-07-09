@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+{% block title %}管理员登录 - 管网监测系统{% endblock %}
+{% block head_extra %}
+<style>
+    body {
+        overflow: hidden;
+    }
+
+    /* 城市天际线背景 SVG */
+    .city-bg {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.12;
+    }
+
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-card {
+        background: rgba(17, 24, 39, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 48px 40px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 0 40px rgba(99, 102, 241, 0.1),
+                    0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 36px;
+    }
+
+    .login-header h4 {
+        color: var(--text-primary);
+        margin-top: 18px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .login-header p {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin-top: 6px;
+    }
+
+    .login-icon {
+        width: 68px;
+        height: 68px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        box-shadow: 0 0 30px rgba(99, 102, 241, 0.4),
+                    0 0 60px rgba(99, 102, 241, 0.15);
+        animation: icon-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes icon-pulse {
+        0%, 100% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.4), 0 0 60px rgba(99, 102, 241, 0.15); }
+        50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6), 0 0 80px rgba(99, 102, 241, 0.25); }
+    }
+
+    .form-control {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-primary);
+        color: var(--text-primary);
+        box-shadow: 0 0 0 3px var(--accent-primary-soft),
+                    0 0 20px var(--accent-primary-glow);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-label {
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 13px;
+        border-radius: 10px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #6366f1, #818cf8);
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 25px rgba(99, 102, 241, 0.5),
+                    0 8px 20px rgba(99, 102, 241, 0.3);
+        background: linear-gradient(135deg, #818cf8, #a5b4fc);
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 13px;
+        transition: color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .back-link:hover {
+        color: var(--accent-primary);
+    }
+
+    .login-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-light), transparent);
+        margin: 24px 0;
+    }
+
+    #login-error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 城市天际线背景 SVG -->
+<svg class="city-bg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+    <!-- 星空/粒子 -->
+    <circle cx="120" cy="80" r="1" fill="#818cf8" opacity="0.6"/>
+    <circle cx="350" cy="150" r="1.2" fill="#6366f1" opacity="0.5"/>
+    <circle cx="580" cy="60" r="0.8" fill="#a5b4fc" opacity="0.7"/>
+    <circle cx="800" cy="200" r="1" fill="#818cf8" opacity="0.4"/>
+    <circle cx="1050" cy="100" r="1.5" fill="#6366f1" opacity="0.6"/>
+    <circle cx="1300" cy="180" r="0.8" fill="#a5b4fc" opacity="0.5"/>
+    <circle cx="1550" cy="50" r="1.2" fill="#818cf8" opacity="0.7"/>
+    <circle cx="1780" cy="130" r="1" fill="#6366f1" opacity="0.4"/>
+    <circle cx="200" cy="300" r="0.6" fill="#a5b4fc" opacity="0.5"/>
+    <circle cx="500" cy="250" r="1" fill="#818cf8" opacity="0.3"/>
+    <circle cx="900" cy="350" r="0.8" fill="#6366f1" opacity="0.6"/>
+    <circle cx="1200" cy="280" r="1.2" fill="#a5b4fc" opacity="0.4"/>
+    <circle cx="1600" cy="320" r="0.6" fill="#818cf8" opacity="0.5"/>
+    <circle cx="1850" cy="250" r="1" fill="#6366f1" opacity="0.6"/>
+
+    <!-- 管网系统（中部） -->
+    <g stroke="#6366f1" stroke-width="1.5" fill="none" opacity="0.4">
+        <!-- 水平主管线 -->
+        <path d="M0 650 H400 L420 630 H700 L720 650 H950 L970 630 H1200 L1220 650 H1920"/>
+        <path d="M0 700 H300 L320 680 H600 L620 700 H850 L870 680 H1100 L1120 700 H1400 L1420 680 H1920"/>
+        <path d="M0 750 H200 L220 730 H500 L520 750 H780 L800 730 H1050 L1070 750 H1350 L1370 730 H1650 L1670 750 H1920"/>
+
+        <!-- 垂直连接管 -->
+        <path d="M400 650 V700"/>
+        <path d="M700 630 V680"/>
+        <path d="M950 650 V700"/>
+        <path d="M1200 630 V680"/>
+        <path d="M300 700 V750"/>
+        <path d="M600 680 V730"/>
+        <path d="M850 700 V750"/>
+        <path d="M1100 680 V730"/>
+        <path d="M1400 700 V750"/>
+
+        <!-- 管点节点 -->
+        <circle cx="400" cy="650" r="4" fill="#6366f1" opacity="0.6"/>
+        <circle cx="700" cy="630" r="4" fill="#6366f1" opacity="0.6"/>
+        <circle cx="950" cy="650" r="4" fill="#6366f1" opacity="0.6"/>
+        <circle cx="1200" cy="630" r="4" fill="#6366f1" opacity="0.6"/>
+        <circle cx="300" cy="700" r="3" fill="#818cf8" opacity="0.5"/>
+        <circle cx="600" cy="680" r="3" fill="#818cf8" opacity="0.5"/>
+        <circle cx="850" cy="700" r="3" fill="#818cf8" opacity="0.5"/>
+        <circle cx="1100" cy="680" r="3" fill="#818cf8" opacity="0.5"/>
+        <circle cx="1400" cy="700" r="3" fill="#818cf8" opacity="0.5"/>
+    </g>
+
+    <!-- 城市天际线（底部） -->
+    <g fill="#1e293b" stroke="#334155" stroke-width="0.5">
+        <!-- 远景建筑群 -->
+        <rect x="50" y="780" width="60" height="300"/>
+        <rect x="55" y="790" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="75" y="790" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="55" y="810" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="75" y="810" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="55" y="830" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="75" y="830" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+
+        <rect x="140" y="720" width="80" height="360"/>
+        <rect x="148" y="730" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="165" y="730" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="182" y="730" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="148" y="750" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="165" y="750" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="182" y="750" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="148" y="770" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="165" y="770" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="182" y="770" width="10" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+
+        <rect x="260" y="680" width="100" height="400"/>
+        <rect x="268" y="690" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="288" y="690" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="308" y="690" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="328" y="690" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="268" y="710" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="288" y="710" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="308" y="710" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="328" y="710" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="268" y="730" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="288" y="730" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="308" y="730" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+        <rect x="328" y="730" width="12" height="8" rx="1" fill="none" stroke="#475569" stroke-width="0.5"/>
+
+        <!-- 中景建筑 -->
+        <rect x="400" y="740" width="70" height="340"/>
+        <rect x="500" y="660" width="90" height="420"/>
+        <rect x="620" y="700" width="60" height="380"/>
+        <rect x="710" y="620" width="110" height="460"/>
+        <rect x="850" y="680" width="75" height="400"/>
+        <rect x="960" y="640" width="95" height="440"/>
+        <rect x="1080" y="710" width="65" height="370"/>
+        <rect x="1170" y="660" width="85" height="420"/>
+        <rect x="1290" y="690" width="70" height="390"/>
+        <rect x="1390" y="630" width="100" height="450"/>
+        <rect x="1520" y="700" width="80" height="380"/>
+        <rect x="1630" y="650" width="90" height="430"/>
+        <rect x="1750" y="720" width="70" height="360"/>
+        <rect x="1850" y="680" width="70" height="400"/>
+
+        <!-- 窗户（高亮建筑） -->
+        <g fill="none" stroke="#475569" stroke-width="0.5">
+            <!-- 建筑 500 -->
+            <rect x="510" y="670" width="10" height="8" rx="1"/>
+            <rect x="530" y="670" width="10" height="8" rx="1"/>
+            <rect x="550" y="670" width="10" height="8" rx="1"/>
+            <rect x="570" y="670" width="10" height="8" rx="1"/>
+            <rect x="510" y="690" width="10" height="8" rx="1"/>
+            <rect x="530" y="690" width="10" height="8" rx="1"/>
+            <rect x="550" y="690" width="10" height="8" rx="1"/>
+            <rect x="570" y="690" width="10" height="8" rx="1"/>
+            <!-- 建筑 710 -->
+            <rect x="720" y="630" width="12" height="8" rx="1"/>
+            <rect x="742" y="630" width="12" height="8" rx="1"/>
+            <rect x="764" y="630" width="12" height="8" rx="1"/>
+            <rect x="786" y="630" width="12" height="8" rx="1"/>
+            <rect x="720" y="650" width="12" height="8" rx="1"/>
+            <rect x="742" y="650" width="12" height="8" rx="1"/>
+            <rect x="764" y="650" width="12" height="8" rx="1"/>
+            <rect x="786" y="650" width="12" height="8" rx="1"/>
+            <!-- 建筑 960 -->
+            <rect x="970" y="650" width="12" height="8" rx="1"/>
+            <rect x="992" y="650" width="12" height="8" rx="1"/>
+            <rect x="1014" y="650" width="12" height="8" rx="1"/>
+            <rect x="970" y="670" width="12" height="8" rx="1"/>
+            <rect x="992" y="670" width="12" height="8" rx="1"/>
+            <rect x="1014" y="670" width="12" height="8" rx="1"/>
+            <!-- 建筑 1390 -->
+            <rect x="1400" y="640" width="12" height="8" rx="1"/>
+            <rect x="1422" y="640" width="12" height="8" rx="1"/>
+            <rect x="1444" y="640" width="12" height="8" rx="1"/>
+            <rect x="1466" y="640" width="12" height="8" rx="1"/>
+            <rect x="1400" y="660" width="12" height="8" rx="1"/>
+            <rect x="1422" y="660" width="12" height="8" rx="1"/>
+            <rect x="1444" y="660" width="12" height="8" rx="1"/>
+            <rect x="1466" y="660" width="12" height="8" rx="1"/>
+            <!-- 建筑 1630 -->
+            <rect x="1640" y="660" width="12" height="8" rx="1"/>
+            <rect x="1662" y="660" width="12" height="8" rx="1"/>
+            <rect x="1684" y="660" width="12" height="8" rx="1"/>
+            <rect x="1640" y="680" width="12" height="8" rx="1"/>
+            <rect x="1662" y="680" width="12" height="8" rx="1"/>
+            <rect x="1684" y="680" width="12" height="8" rx="1"/>
+        </g>
+    </g>
+
+    <!-- 渐变遮罩（底部到顶部渐隐） -->
+    <defs>
+        <linearGradient id="fadeMask" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="transparent"/>
+            <stop offset="60%" stop-color="transparent"/>
+            <stop offset="100%" stop-color="#0a0e1a" stop-opacity="0.8"/>
+        </linearGradient>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#fadeMask)"/>
+</svg>
+
+<div class="container">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <h4>管理员登录</h4>
+                <p>管网监测系统管理控制台</p>
+            </div>
+
+            <form id="login-form">
+                <div class="mb-3">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="username" placeholder="请输入用户名" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-control" id="password" placeholder="请输入密码" required>
+                </div>
+                <div id="login-error" class="text-danger mb-3" style="display: none;"></div>
+                <button type="submit" class="btn btn-login">
+                    <svg width="16" height="16" style="margin-right: 8px; vertical-align: -2px;"><use href="#icon-login"/></svg>
+                    登录
+                </button>
+            </form>
+
+            <div class="login-divider"></div>
+
+            <div class="text-center">
+                <a href="/" class="back-link">
+                    <svg width="14" height="14"><use href="#icon-arrow-left"/></svg>
+                    返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errorEl = document.getElementById('login-error');
+
+    try {
+        const resp = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            window.location.href = '/admin';
+        } else {
+            errorEl.textContent = data.error;
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = '登录失败: ' + e.message;
+        errorEl.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

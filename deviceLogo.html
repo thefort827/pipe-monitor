@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    
+    <!-- 扫描弧渐变 -->
+    <linearGradient id="arc-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00FFCC" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0066FF" stop-opacity="0.1" />
+    </linearGradient>
+
+    <!-- 传感器镜头渐变 -->
+    <radialGradient id="lens-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00FFCC" stop-opacity="0.15" />
+      <stop offset="70%" stop-color="#1A1A3A" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#0A0A1A" stop-opacity="0.9" />
+    </radialGradient>
+
+    <!-- 六边形投影 -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="15" stdDeviation="20" flood-color="#000" flood-opacity="0.6" />
+    </filter>
+
+    <!-- 背景网格图案 -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#00FFCC" stroke-width="1" opacity="0.05" />
+    </pattern>
+  </defs>
+
+
+  
+
+  <!-- 主视觉传感器硬件层 -->
+  <g filter="url(#shadow)">
+    <!-- 六边形外壳 -->
+    <polygon points="400,150 573.2,250 573.2,450 400,550 226.8,450 226.8,250" fill="none" stroke="#00FFCC" stroke-width="4" opacity="0.3" />
+    <polygon points="400,150 573.2,250 573.2,450 400,550 226.8,450 226.8,250" fill="none" stroke="#00FFCC" stroke-width="12" opacity="0.1" />
+
+    <!-- 内部虚拟连接线（从节点到中心） -->
+    <line x1="400" y1="150" x2="400" y2="350" stroke="#00FFCC" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.3" />
+    <line x1="573.2" y1="250" x2="400" y2="350" stroke="#00FFCC" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.3" />
+    <line x1="573.2" y1="450" x2="400" y2="350" stroke="#00FFCC" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.3" />
+    <line x1="400" y1="550" x2="400" y2="350" stroke="#00FFCC" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.3" />
+    <line x1="226.8" y1="450" x2="400" y2="350" stroke="#00FFCC" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.3" />
+    <line x1="226.8" y1="250" x2="400" y2="350" stroke="#00FFCC" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.3" />
+
+    <!-- 六边形边界节点 -->
+    <g>
+      <circle cx="400" cy="150" r="10" fill="none" stroke="#00FFCC" stroke-width="3" />
+      <circle cx="400" cy="150" r="4" fill="#FFFFFF" />
+      
+      <circle cx="573.2" cy="250" r="10" fill="none" stroke="#00FFCC" stroke-width="3" />
+      <circle cx="573.2" cy="250" r="4" fill="#FFFFFF" />
+      
+      <circle cx="573.2" cy="450" r="10" fill="none" stroke="#00FFCC" stroke-width="3" />
+      <circle cx="573.2" cy="450" r="4" fill="#FFFFFF" />
+      
+      <circle cx="400" cy="550" r="10" fill="none" stroke="#00FFCC" stroke-width="3" />
+      <circle cx="400" cy="550" r="4" fill="#FFFFFF" />
+      
+      <circle cx="226.8" cy="450" r="10" fill="none" stroke="#00FFCC" stroke-width="3" />
+      <circle cx="226.8" cy="450" r="4" fill="#FFFFFF" />
+      
+      <circle cx="226.8" cy="250" r="10" fill="none" stroke="#00FFCC" stroke-width="3" />
+      <circle cx="226.8" cy="250" r="4" fill="#FFFFFF" />
+    </g>
+
+    <!-- 传感器镜头与雷达核心 -->
+    <!-- 镜头外圈 -->
+    <circle cx="400" cy="350" r="100" fill="#1A1A2E" stroke="url(#text-grad)" stroke-width="6" />
+    <!-- 镜头内圈 -->
+    <circle cx="400" cy="350" r="85" fill="url(#lens-grad)" stroke="#00FFCC" stroke-width="1.5" opacity="0.6" />
+    
+    <!-- 十字准星 / 瞄准器 -->
+    <path d="M 320 350 L 350 350 M 450 350 L 480 350 M 400 270 L 400 300 M 400 400 L 400 430" stroke="#00FFCC" stroke-width="2" opacity="0.6" />
+    
+    <!-- 光圈叶片（科技感快门） -->
+    <circle cx="400" cy="350" r="50" fill="none" stroke="#00FFCC" stroke-width="8" stroke-dasharray="15 20" opacity="0.4" />
+    <circle cx="400" cy="350" r="50" fill="none" stroke="#00FFCC" stroke-width="2" opacity="0.8" />
+    
+    <!-- 核心眼点 -->
+    <circle cx="400" cy="350" r="15" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.8" />
+    <circle cx="400" cy="350" r="5" fill="#00FFCC" />
+
+  </g>
+
+
+</svg>

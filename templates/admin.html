@@ -1,0 +1,1340 @@
+{% extends "base.html" %}
+{% block title %}管理控制台 - 管网监测系统{% endblock %}
+{% block head_extra %}
+<style>
+    .admin-container {
+        padding: 24px;
+    }
+    .admin-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin-bottom: 20px;
+        transition: all 0.2s ease;
+    }
+    .admin-card:hover {
+        border-color: var(--border-light);
+    }
+    .admin-card h6 {
+        color: var(--text-primary);
+    }
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 13px;
+    }
+    .status-connected {
+        background: rgba(16, 185, 129, 0.12);
+        color: #6ee7b7;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .status-disconnected {
+        background: rgba(239, 68, 68, 0.12);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+    .status-dot.green {
+        background: #10b981;
+        box-shadow: 0 0 8px var(--color-success-glow);
+    }
+    .status-dot.red {
+        background: #ef4444;
+        box-shadow: 0 0 8px var(--color-danger-glow);
+    }
+    .qr-container {
+        text-align: center;
+        padding: 20px;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        border: 1px dashed var(--border-light);
+    }
+    .qr-placeholder {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+    .token-display {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        background: var(--bg-tertiary);
+        padding: 12px;
+        border-radius: var(--radius-sm);
+        word-break: break-all;
+        font-size: 12px;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-subtle);
+    }
+    .btn-action {
+        min-width: 120px;
+    }
+    .nav-pills .nav-link {
+        border-radius: 8px;
+        margin-bottom: 4px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        transition: all 0.2s ease;
+    }
+    .nav-pills .nav-link:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+    .nav-pills .nav-link.active {
+        background: var(--accent-primary);
+        color: white;
+        box-shadow: 0 0 15px var(--accent-primary-glow);
+    }
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .stat-card {
+        text-align: center;
+        padding: 24px 20px;
+        border-radius: var(--radius-lg);
+        color: white;
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    .stat-card h3 {
+        font-size: 2rem;
+        margin-bottom: 5px;
+        font-weight: 800;
+    }
+    .stat-card p {
+        margin-bottom: 0;
+        opacity: 0.9;
+        font-size: 13px;
+    }
+    .config-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .config-item:last-child {
+        border-bottom: none;
+    }
+    .config-item strong {
+        color: var(--text-primary);
+    }
+    .config-item .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    /* 页面标题 */
+    .admin-title {
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .admin-title svg {
+        color: var(--accent-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0 admin-title">
+            <svg width="22" height="22"><use href="#icon-settings"/></svg>
+            管理控制台
+        </h4>
+    </div>
+
+    <div class="row">
+        <!-- 左侧导航 -->
+        <div class="col-lg-2">
+            <div class="nav flex-column nav-pills" id="admin-tabs" role="tablist">
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-bot" type="button">
+                    <svg width="16" height="16"><use href="#icon-chat"/></svg>
+                    Bot管理
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-users" type="button">
+                    <svg width="16" height="16"><use href="#icon-users"/></svg>
+                    用户管理
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-messages" type="button">
+                    <svg width="16" height="16"><use href="#icon-send"/></svg>
+                    消息中心
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-contacts" type="button">
+                    <svg width="16" height="16"><use href="#icon-phone"/></svg>
+                    告警联系人
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-config" type="button">
+                    <svg width="16" height="16"><use href="#icon-settings"/></svg>
+                    系统配置
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-stats" type="button">
+                    <svg width="16" height="16"><use href="#icon-bar-chart"/></svg>
+                    数据统计
+                </button>
+            </div>
+        </div>
+
+        <!-- 右侧内容 -->
+        <div class="col-lg-10">
+            <div class="tab-content">
+                <!-- Bot管理 Tab -->
+                <div class="tab-pane fade show active" id="tab-bot">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">iLink Bot 连接状态</h6>
+                                <div id="connection-status" class="mb-3">
+                                    <span class="status-indicator status-disconnected">
+                                        <span class="status-dot red"></span>
+                                        检查中...
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small" style="color: var(--text-muted);">当前 Token</label>
+                                    <div class="token-display" id="current-token">加载中...</div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-glow btn-action" onclick="verifyConnection()">
+                                        <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-check-circle"/></svg>
+                                        验证连接
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-action" style="border-color: var(--border-light); color: var(--text-secondary);" onclick="loadStatus()">
+                                        <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-refresh"/></svg>
+                                        刷新
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">扫码连接</h6>
+                                <div class="qr-container" id="qr-area">
+                                    <div class="qr-placeholder">
+                                        <svg width="48" height="48" style="color: var(--text-muted); margin-bottom: 8px;"><use href="#icon-qr-code"/></svg>
+                                        <p class="mb-0">点击下方按钮生成二维码</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-center mt-3">
+                                    <button class="btn btn-glow btn-action" id="btn-generate" onclick="generateQRCode()">
+                                        <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-qr-code"/></svg>
+                                        生成二维码
+                                    </button>
+                                </div>
+                                <div id="qr-status" class="text-center mt-3" style="display:none;">
+                                    <small style="color: var(--text-muted);">请用微信扫描二维码，然后在微信中确认连接</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">手动更新 Token</h6>
+                                <div class="mb-3">
+                                    <label for="new-token" class="form-label">新的 ILINK_TOKEN</label>
+                                    <input type="text" class="form-control" id="new-token" placeholder="粘贴新的 token...">
+                                </div>
+                                <button class="btn btn-glow-warning btn-action" onclick="updateToken()">
+                                    <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-edit"/></svg>
+                                    更新 Token
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">测试发送</h6>
+                                <div class="mb-3">
+                                    <label for="test-message" class="form-label">测试消息</label>
+                                    <input type="text" class="form-control" id="test-message" value="这是一条测试消息" placeholder="输入测试消息...">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="test-user" class="form-label">接收用户 ID</label>
+                                    <input type="text" class="form-control" id="test-user" placeholder="o9cq808GUEFQXB0u5STK52BTC_cU@im.wechat">
+                                </div>
+                                <button class="btn btn-glow-success btn-action" onclick="testSend()">
+                                    <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-send"/></svg>
+                                    发送测试
+                                </button>
+                                <div id="test-result" class="mt-3" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户管理 Tab -->
+                <div class="tab-pane fade" id="tab-users">
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">添加用户（扫码添加）</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">用户备注名</label>
+                                    <input type="text" class="form-control" id="new-user-display-name" placeholder="输入用户备注名">
+                                </div>
+                                <div class="qr-container" id="user-qr-area">
+                                    <div class="qr-placeholder">
+                                        <svg width="48" height="48" style="color: var(--text-muted); margin-bottom: 8px;"><use href="#icon-qr-code"/></svg>
+                                        <p class="mb-0">点击下方按钮生成二维码</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-center mt-3">
+                                    <button class="btn btn-glow" id="btn-generate-user-qr" onclick="generateUserQRCode()">
+                                        <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-qr-code"/></svg>
+                                        生成二维码
+                                    </button>
+                                </div>
+                                <div id="user-qr-status" class="text-center mt-3" style="display:none;">
+                                    <small style="color: var(--text-muted);">请用微信扫描二维码，然后在微信中确认连接</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-0">用户列表</h6>
+                                <div class="table-container mt-3">
+                                    <table class="table table-dark-theme">
+                                        <thead>
+                                            <tr>
+                                                <th>用户ID</th>
+                                                <th>备注名</th>
+                                                <th>创建时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="users-table-body">
+                                            <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 消息中心 Tab -->
+                <div class="tab-pane fade" id="tab-messages">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">发送消息</h6>
+                                <div class="mb-3">
+                                    <label for="send-receiver" class="form-label">选择接收用户</label>
+                                    <select class="form-select" id="send-receiver-select" onchange="document.getElementById('send-receiver').value = this.value">
+                                        <option value="">-- 选择用户 --</option>
+                                    </select>
+                                    <input type="text" class="form-control mt-2" id="send-receiver" placeholder="或直接输入微信ID">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="send-message" class="form-label">消息内容</label>
+                                    <textarea class="form-control" id="send-message" rows="3" placeholder="输入消息内容..."></textarea>
+                                </div>
+                                <button class="btn btn-glow" onclick="sendMessage()">
+                                    <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-send"/></svg>
+                                    发送
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">批量发送</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">选择接收用户（可多选）</label>
+                                    <div id="batch-user-checkboxes" class="border rounded p-2" style="max-height: 150px; overflow-y: auto; border-color: var(--border-light) !important; background: var(--bg-tertiary);">
+                                        <div style="color: var(--text-muted); font-size: 13px;">加载中...</div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="batch-message" class="form-label">消息内容</label>
+                                    <textarea class="form-control" id="batch-message" rows="3" placeholder="输入消息内容..."></textarea>
+                                </div>
+                                <button class="btn btn-glow-warning" onclick="batchSend()">
+                                    <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-send"/></svg>
+                                    批量发送
+                                </button>
+                                <div id="batch-result" class="mt-3" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-card">
+                        <h6 class="fw-bold mb-3">消息记录</h6>
+                        <div class="table-container">
+                            <table class="table table-dark-theme">
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>发送者</th>
+                                        <th>接收者</th>
+                                        <th>消息</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="messages-table-body">
+                                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 告警联系人 Tab -->
+                <div class="tab-pane fade" id="tab-contacts">
+                    <div class="admin-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">告警联系人列表</h6>
+                            <button class="btn btn-glow btn-sm" onclick="showAddContactModal()">
+                                <svg width="16" height="16" style="vertical-align: -2px;"><use href="#icon-user-plus"/></svg>
+                                添加联系人
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table class="table table-dark-theme">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>姓名</th>
+                                        <th>微信ID</th>
+                                        <th>告警类型</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contacts-table-body">
+                                    <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统配置 Tab -->
+                <div class="tab-pane fade" id="tab-config">
+                    <div class="admin-card">
+                        <h6 class="fw-bold mb-3">系统配置</h6>
+                        <div id="config-list">
+                            <div style="text-align: center; color: var(--text-muted);">加载中...</div>
+                        </div>
+                        <button class="btn btn-glow mt-3" onclick="saveConfig()">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- 数据统计 Tab -->
+                <div class="tab-pane fade" id="tab-stats">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);">
+                                <h3 id="stat-today-messages">0</h3>
+                                <p>今日消息</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
+                                <h3 id="stat-total-messages">0</h3>
+                                <p>总消息数</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">
+                                <h3 id="stat-device-count">0</h3>
+                                <p>设备总数</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);">
+                                <h3 id="stat-uptime">-</h3>
+                                <p>运行时间</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">近7天消息趋势</h6>
+                                <canvas id="messageChart" height="300"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="admin-card">
+                                <h6 class="fw-bold mb-3">消息类型分布</h6>
+                                <canvas id="typeChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 用户编辑模态框 -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalTitle">编辑用户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-user-id">
+                <div class="mb-3">
+                    <label class="form-label">用户ID（微信ID）</label>
+                    <input type="text" class="form-control" id="edit-username" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">备注名</label>
+                    <input type="text" class="form-control" id="edit-display-name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-color: var(--border-light); color: var(--text-secondary);">取消</button>
+                <button type="button" class="btn btn-glow" onclick="saveUser()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 联系人编辑模态框 -->
+<div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactModalTitle">添加联系人</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-contact-id">
+                <div class="mb-3">
+                    <label class="form-label">姓名</label>
+                    <input type="text" class="form-control" id="edit-contact-name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">微信ID</label>
+                    <input type="text" class="form-control" id="edit-contact-wechat-id" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">告警类型</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="alert-device" value="device_alert" checked>
+                            <label class="form-check-label">设备告警</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="alert-daily" value="daily_report" checked>
+                            <label class="form-check-label">日报</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="alert-hourly" value="hourly_report">
+                            <label class="form-check-label">小时报</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-color: var(--border-light); color: var(--text-secondary);">取消</button>
+                <button type="button" class="btn btn-glow" onclick="saveContact()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+// 全局变量
+let currentQrcodeId = null;
+let pollTimer = null;
+// ===== 初始化 =====
+document.addEventListener('DOMContentLoaded', () => {
+    loadAllData();
+});
+
+// ===== 加载所有数据 =====
+function loadAllData() {
+    loadStatus();
+    loadUsers();
+    loadMessages();
+    loadUserSelectors();
+    loadContacts();
+    loadConfig();
+    loadStats();
+    
+    // 每30秒刷新一次连接状态
+    setInterval(loadStatus, 30000);
+}
+
+// ===== Bot管理 =====
+async function loadStatus() {
+    try {
+        const resp = await fetch('/api/ilink/verify');
+        const data = await resp.json();
+        const statusEl = document.getElementById('connection-status');
+        const tokenEl = document.getElementById('current-token');
+
+        tokenEl.textContent = data.token_preview || '未设置';
+
+        if (data.connected) {
+            statusEl.innerHTML = '<span class="status-indicator status-connected"><span class="status-dot green"></span>已连接</span>';
+        } else {
+            statusEl.innerHTML = '<span class="status-indicator status-disconnected"><span class="status-dot red"></span>未连接</span>';
+        }
+    } catch (e) {
+        console.error('Load status error:', e);
+    }
+}
+
+async function verifyConnection() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>验证中...';
+
+    await loadStatus();
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" style="vertical-align:-2px"><use href="#icon-check-circle"/></svg>验证连接';
+}
+
+async function generateQRCode() {
+    const btn = document.getElementById('btn-generate');
+    const qrArea = document.getElementById('qr-area');
+    const qrStatus = document.getElementById('qr-status');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>生成中...';
+
+    try {
+        const resp = await fetch('/api/ilink/qrcode', { method: 'POST' });
+        const data = await resp.json();
+
+        if (data.qrcode_url) {
+            currentQrcodeId = data.qrcode_id;
+            qrArea.innerHTML = `
+                <div class="mb-3">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" style="margin-bottom:8px">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="3" height="3"></rect>
+                    </svg>
+                </div>
+                <a href="${data.qrcode_url}" target="_blank" class="btn btn-glow btn-lg mb-2">
+                    点击打开二维码
+                </a>
+                <div style="color:var(--text-muted);font-size:13px">在新窗口中用微信扫描二维码</div>
+            `;
+            qrStatus.style.display = 'block';
+            startPolling();
+        } else {
+            qrArea.innerHTML = '<div style="color:var(--color-danger)">生成二维码失败: ' + (data.error || '未知错误') + '</div>';
+        }
+    } catch (e) {
+        qrArea.innerHTML = '<div style="color:var(--color-danger)">请求失败: ' + e.message + '</div>';
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" style="vertical-align:-2px"><use href="#icon-qr-code"/></svg>生成二维码';
+}
+
+function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+
+    pollTimer = setInterval(async () => {
+        if (!currentQrcodeId) return;
+
+        try {
+            const resp = await fetch('/api/ilink/status/' + currentQrcodeId);
+            const data = await resp.json();
+            const qrStatus = document.getElementById('qr-status');
+
+            if (data.status === 'confirmed') {
+                clearInterval(pollTimer);
+                let updateResult = '';
+                if (data.bot_token) {
+                    try {
+                        const updateResp = await fetch('/api/ilink/update-token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token: data.bot_token })
+                        });
+                        const updateData = await updateResp.json();
+                        updateResult = updateData.success ? 'Token 已自动更新' : 'Token 更新失败';
+                    } catch (err) {
+                        updateResult = 'Token 更新出错';
+                    }
+                }
+                qrStatus.innerHTML = `
+                    <div style="color:var(--color-success);font-weight:700;margin-bottom:8px">连接成功！</div>
+                    <div class="badge-dark-success py-2 px-3 mb-2" style="display:inline-block;border-radius:8px">${updateResult}</div>
+                `;
+                setTimeout(loadStatus, 1500);
+            } else if (data.status === 'scaned') {
+                qrStatus.innerHTML = '<small style="color:var(--accent-primary)">已扫码，等待确认...</small>';
+            } else if (data.status === 'expired') {
+                clearInterval(pollTimer);
+                qrStatus.innerHTML = '<div style="color:var(--color-warning)">二维码已过期，请重新生成</div>';
+            }
+        } catch (e) {
+            console.error('Poll status error:', e);
+        }
+    }, 2000);
+}
+
+async function updateToken() {
+    const token = document.getElementById('new-token').value.trim();
+    if (!token) {
+        alert('请输入新的 Token');
+        return;
+    }
+
+    try {
+        const resp = await fetch('/api/ilink/update-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            alert('Token 更新成功！');
+            document.getElementById('new-token').value = '';
+            loadStatus();
+        } else {
+            alert('更新失败: ' + (data.error || '未知错误'));
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+async function testSend() {
+    const message = document.getElementById('test-message').value;
+    const userId = document.getElementById('test-user').value;
+    const resultEl = document.getElementById('test-result');
+
+    if (!message || !userId) {
+        alert('请输入消息和用户 ID');
+        return;
+    }
+
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<small style="color:var(--text-muted)">发送中...</small>';
+
+    try {
+        const resp = await fetch('/api/ilink/test-send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, user_id: userId })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            resultEl.innerHTML = '<div class="badge-dark-success py-2 mb-0" style="display:block;border-radius:8px">发送成功！</div>';
+        } else {
+            resultEl.innerHTML = '<div class="badge-dark-danger py-2 mb-0" style="display:block;border-radius:8px">发送失败: ' + (data.error || JSON.stringify(data)) + '</div>';
+        }
+    } catch (e) {
+        resultEl.innerHTML = '<div class="badge-dark-danger py-2 mb-0" style="display:block;border-radius:8px">请求失败: ' + e.message + '</div>';
+    }
+}
+
+// ===== 用户管理 =====
+let userQrcodeId = null;
+let userPollTimer = null;
+
+async function loadUsers() {
+    try {
+        const resp = await fetch('/api/admin/users');
+        const data = await resp.json();
+        const tbody = document.getElementById('users-table-body');
+
+        if (data.users && data.users.length > 0) {
+            tbody.innerHTML = data.users.map(user => `
+                <tr>
+                    <td><code style="color:var(--accent-primary)">${user.username}</code></td>
+                    <td>${user.display_name || '-'}</td>
+                    <td>${user.created_at || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})" style="border-color:var(--border-light);color:var(--accent-primary)">编辑</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})" style="border-color:rgba(239,68,68,0.3);color:var(--color-danger)">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">暂无用户，请扫码添加</td></tr>';
+        }
+    } catch (e) {
+        console.error('Load users error:', e);
+    }
+}
+
+async function generateUserQRCode() {
+    const btn = document.getElementById('btn-generate-user-qr');
+    const qrArea = document.getElementById('user-qr-area');
+    const qrStatus = document.getElementById('user-qr-status');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>生成中...';
+
+    try {
+        const resp = await fetch('/api/ilink/qrcode', { method: 'POST' });
+        const data = await resp.json();
+
+        if (data.qrcode_url) {
+            userQrcodeId = data.qrcode_id;
+            qrArea.innerHTML = `
+                <div class="mb-3">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" style="margin-bottom:8px">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="3" height="3"></rect>
+                    </svg>
+                </div>
+                <a href="${data.qrcode_url}" target="_blank" class="btn btn-glow btn-lg mb-2">
+                    点击打开二维码
+                </a>
+                <div style="color:var(--text-muted);font-size:13px">在新窗口中用微信扫描二维码</div>
+            `;
+            qrStatus.style.display = 'block';
+            startUserPolling();
+        } else {
+            qrArea.innerHTML = '<div style="color:var(--color-danger)">生成二维码失败: ' + (data.error || '未知错误') + '</div>';
+        }
+    } catch (e) {
+        qrArea.innerHTML = '<div style="color:var(--color-danger)">请求失败: ' + e.message + '</div>';
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" style="vertical-align:-2px"><use href="#icon-qr-code"/></svg>生成二维码';
+}
+
+function startUserPolling() {
+    if (userPollTimer) clearInterval(userPollTimer);
+
+    userPollTimer = setInterval(async () => {
+        if (!userQrcodeId) return;
+
+        try {
+            const resp = await fetch('/api/ilink/status/' + userQrcodeId);
+            const data = await resp.json();
+            const qrStatus = document.getElementById('user-qr-status');
+
+            if (data.status === 'confirmed') {
+                clearInterval(userPollTimer);
+
+                const userId = data.user_id;
+                if (userId) {
+                    const displayName = document.getElementById('new-user-display-name').value || userId;
+
+                    const addResp = await fetch('/api/admin/users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: userId,
+                            display_name: displayName,
+                            role: 'user'
+                        })
+                    });
+                    const addResult = await addResp.json();
+
+                    if (addResult.success) {
+                        qrStatus.innerHTML = `
+                            <div style="color:var(--color-success);font-weight:700;margin-bottom:8px">添加成功！</div>
+                            <div class="badge-dark-success py-2 px-3 mb-2" style="display:inline-block;border-radius:8px">用户ID: ${userId}</div>
+                        `;
+                        loadUsers();
+                    } else {
+                        qrStatus.innerHTML = `
+                            <div style="color:var(--color-warning);margin-bottom:8px">${addResult.error || '添加失败'}</div>
+                        `;
+                    }
+                } else {
+                    qrStatus.innerHTML = '<div style="color:var(--color-warning)">未获取到用户ID</div>';
+                }
+            } else if (data.status === 'scaned') {
+                qrStatus.innerHTML = '<small style="color:var(--accent-primary)">已扫码，等待确认...</small>';
+            } else if (data.status === 'expired') {
+                clearInterval(userPollTimer);
+                qrStatus.innerHTML = '<div style="color:var(--color-warning)">二维码已过期，请重新生成</div>';
+            }
+        } catch (e) {
+            console.error('Poll status error:', e);
+        }
+    }, 2000);
+}
+
+async function editUser(userId) {
+    try {
+        const resp = await fetch('/api/admin/users');
+        const data = await resp.json();
+        const user = data.users.find(u => u.id === userId);
+
+        if (user) {
+            document.getElementById('userModalTitle').textContent = '编辑用户';
+            document.getElementById('edit-user-id').value = user.id;
+            document.getElementById('edit-username').value = user.username;
+            document.getElementById('edit-display-name').value = user.display_name || '';
+            new bootstrap.Modal(document.getElementById('userModal')).show();
+        }
+    } catch (e) {
+        alert('加载用户信息失败');
+    }
+}
+
+async function saveUser() {
+    const userId = document.getElementById('edit-user-id').value;
+    const data = {
+        display_name: document.getElementById('edit-display-name').value
+    };
+
+    try {
+        const resp = await fetch(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await resp.json();
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+            loadUsers();
+        } else {
+            alert('保存失败: ' + (result.error || '未知错误'));
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+async function deleteUser(userId) {
+    if (!confirm('确定要删除该用户吗？')) return;
+
+    try {
+        const resp = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+        const result = await resp.json();
+
+        if (result.success) {
+            loadUsers();
+        } else {
+            alert('删除失败: ' + (result.error || '未知错误'));
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+// ===== 消息中心 =====
+let allUsers = [];
+
+async function loadMessages() {
+    try {
+        const resp = await fetch('/api/admin/messages?limit=20');
+        const data = await resp.json();
+        const tbody = document.getElementById('messages-table-body');
+
+        if (data.messages && data.messages.length > 0) {
+            tbody.innerHTML = data.messages.map(msg => `
+                <tr>
+                    <td>${msg.created_at || '-'}</td>
+                    <td>${msg.sender || '-'}</td>
+                    <td>${msg.receiver || '-'}</td>
+                    <td>${(msg.message || '').substring(0, 50)}${(msg.message || '').length > 50 ? '...' : ''}</td>
+                    <td><span class="badge ${msg.status === 'sent' ? 'badge-dark-success' : 'badge-dark-danger'}" style="border:none">${msg.status === 'sent' ? '已发送' : '失败'}</span></td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">暂无消息记录</td></tr>';
+        }
+    } catch (e) {
+        console.error('Load messages error:', e);
+    }
+}
+
+async function loadUserSelectors() {
+    try {
+        const resp = await fetch('/api/admin/users');
+        const data = await resp.json();
+        allUsers = data.users || [];
+
+        const select = document.getElementById('send-receiver-select');
+        if (select) {
+            select.innerHTML = '<option value="">-- 选择用户 --</option>' +
+                allUsers.map(u => `<option value="${u.wechat_id || u.username}">${u.display_name || u.username}</option>`).join('');
+        }
+
+        const checkboxes = document.getElementById('batch-user-checkboxes');
+        if (checkboxes) {
+            if (allUsers.length > 0) {
+                checkboxes.innerHTML = allUsers.map(u => `
+                    <div class="form-check">
+                        <input class="form-check-input batch-user-checkbox" type="checkbox" value="${u.wechat_id || u.username}" id="user-${u.id}">
+                        <label class="form-check-label" for="user-${u.id}">
+                            ${u.display_name || u.username} <small style="color:var(--text-muted)">(${u.username})</small>
+                        </label>
+                    </div>
+                `).join('');
+            } else {
+                checkboxes.innerHTML = '<div style="color:var(--text-muted);font-size:13px">暂无用户，请先添加</div>';
+            }
+        }
+    } catch (e) {
+        console.error('Load user selectors error:', e);
+    }
+}
+
+async function sendMessage() {
+    const receiver = document.getElementById('send-receiver').value;
+    const message = document.getElementById('send-message').value;
+
+    if (!receiver || !message) {
+        alert('请输入接收者和消息内容');
+        return;
+    }
+
+    try {
+        const resp = await fetch('/api/admin/messages/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ receiver, message })
+        });
+        const result = await resp.json();
+
+        if (result.success) {
+            alert('发送成功！');
+            document.getElementById('send-message').value = '';
+            loadMessages();
+        } else {
+            alert('发送失败: ' + (result.error || '未知错误'));
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+async function batchSend() {
+    const checkboxes = document.querySelectorAll('.batch-user-checkbox:checked');
+    const message = document.getElementById('batch-message').value;
+    const resultEl = document.getElementById('batch-result');
+
+    if (checkboxes.length === 0 || !message) {
+        alert('请选择接收用户和输入消息内容');
+        return;
+    }
+
+    const receivers = Array.from(checkboxes).map(cb => cb.value);
+
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<small style="color:var(--text-muted)">发送中...</small>';
+
+    try {
+        const resp = await fetch('/api/admin/messages/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ receivers, message })
+        });
+        const result = await resp.json();
+
+        if (result.success) {
+            resultEl.innerHTML = `<div class="badge-dark-success py-2 mb-0" style="display:block;border-radius:8px">发送完成！成功: ${result.success_count}, 失败: ${result.fail_count}</div>`;
+            loadMessages();
+        } else {
+            resultEl.innerHTML = `<div class="badge-dark-danger py-2 mb-0" style="display:block;border-radius:8px">发送失败: ${result.error}</div>`;
+        }
+    } catch (e) {
+        resultEl.innerHTML = `<div class="badge-dark-danger py-2 mb-0" style="display:block;border-radius:8px">请求失败: ${e.message}</div>`;
+    }
+}
+
+// ===== 告警联系人 =====
+async function loadContacts() {
+    try {
+        const resp = await fetch('/api/admin/contacts');
+        const data = await resp.json();
+        const tbody = document.getElementById('contacts-table-body');
+
+        if (data.contacts && data.contacts.length > 0) {
+            tbody.innerHTML = data.contacts.map(contact => {
+                const alertTypes = JSON.parse(contact.alert_types || '[]');
+                const typeLabels = {
+                    'device_alert': '设备告警',
+                    'daily_report': '日报',
+                    'hourly_report': '小时报'
+                };
+                const typeBadges = alertTypes.map(t => `<span class="badge badge-dark-info me-1" style="border:none">${typeLabels[t] || t}</span>`).join('');
+
+                return `
+                    <tr>
+                        <td>${contact.id}</td>
+                        <td>${contact.name || '-'}</td>
+                        <td>${contact.wechat_id}</td>
+                        <td>${typeBadges || '-'}</td>
+                        <td><span class="badge ${contact.is_active ? 'badge-dark-success' : 'badge-dark-danger'}" style="border:none">${contact.is_active ? '启用' : '禁用'}</span></td>
+                        <td>${contact.created_at || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editContact(${contact.id})" style="border-color:var(--border-light);color:var(--accent-primary)">编辑</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteContact(${contact.id})" style="border-color:rgba(239,68,68,0.3);color:var(--color-danger)">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">暂无联系人</td></tr>';
+        }
+    } catch (e) {
+        console.error('Load contacts error:', e);
+    }
+}
+
+function showAddContactModal() {
+    document.getElementById('contactModalTitle').textContent = '添加联系人';
+    document.getElementById('edit-contact-id').value = '';
+    document.getElementById('edit-contact-name').value = '';
+    document.getElementById('edit-contact-wechat-id').value = '';
+    document.getElementById('alert-device').checked = true;
+    document.getElementById('alert-daily').checked = true;
+    document.getElementById('alert-hourly').checked = false;
+    new bootstrap.Modal(document.getElementById('contactModal')).show();
+}
+
+async function editContact(contactId) {
+    try {
+        const resp = await fetch('/api/admin/contacts');
+        const data = await resp.json();
+        const contact = data.contacts.find(c => c.id === contactId);
+
+        if (contact) {
+            document.getElementById('contactModalTitle').textContent = '编辑联系人';
+            document.getElementById('edit-contact-id').value = contact.id;
+            document.getElementById('edit-contact-name').value = contact.name || '';
+            document.getElementById('edit-contact-wechat-id').value = contact.wechat_id;
+
+            const alertTypes = JSON.parse(contact.alert_types || '[]');
+            document.getElementById('alert-device').checked = alertTypes.includes('device_alert');
+            document.getElementById('alert-daily').checked = alertTypes.includes('daily_report');
+            document.getElementById('alert-hourly').checked = alertTypes.includes('hourly_report');
+
+            new bootstrap.Modal(document.getElementById('contactModal')).show();
+        }
+    } catch (e) {
+        alert('加载联系人信息失败');
+    }
+}
+
+async function saveContact() {
+    const contactId = document.getElementById('edit-contact-id').value;
+    const alertTypes = [];
+    if (document.getElementById('alert-device').checked) alertTypes.push('device_alert');
+    if (document.getElementById('alert-daily').checked) alertTypes.push('daily_report');
+    if (document.getElementById('alert-hourly').checked) alertTypes.push('hourly_report');
+
+    const data = {
+        name: document.getElementById('edit-contact-name').value,
+        wechat_id: document.getElementById('edit-contact-wechat-id').value,
+        alert_types: alertTypes
+    };
+
+    if (!data.wechat_id) {
+        alert('微信ID不能为空');
+        return;
+    }
+
+    try {
+        let resp;
+        if (contactId) {
+            resp = await fetch(`/api/admin/contacts/${contactId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        } else {
+            resp = await fetch('/api/admin/contacts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        }
+
+        const result = await resp.json();
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('contactModal')).hide();
+            loadContacts();
+        } else {
+            alert('保存失败: ' + (result.error || '未知错误'));
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+async function deleteContact(contactId) {
+    if (!confirm('确定要删除该联系人吗？')) return;
+
+    try {
+        const resp = await fetch(`/api/admin/contacts/${contactId}`, { method: 'DELETE' });
+        const result = await resp.json();
+
+        if (result.success) {
+            loadContacts();
+        } else {
+            alert('删除失败: ' + (result.error || '未知错误'));
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+// ===== 系统配置 =====
+async function loadConfig() {
+    try {
+        const resp = await fetch('/api/admin/config');
+        const data = await resp.json();
+        const container = document.getElementById('config-list');
+
+        if (data.configs && data.configs.length > 0) {
+            container.innerHTML = data.configs.map(config => `
+                <div class="config-item">
+                    <div>
+                        <strong>${config.key}</strong>
+                        <div style="color:var(--text-muted);font-size:12px">${config.description || ''}</div>
+                    </div>
+                    <input type="text" class="form-control" style="width: 200px;"
+                           data-config-key="${config.key}" value="${config.value || ''}">
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<div style="text-align:center;color:var(--text-muted)">暂无配置</div>';
+        }
+    } catch (e) {
+        console.error('Load config error:', e);
+    }
+}
+
+async function saveConfig() {
+    const inputs = document.querySelectorAll('[data-config-key]');
+    const data = {};
+
+    inputs.forEach(input => {
+        data[input.dataset.configKey] = input.value;
+    });
+
+    try {
+        const resp = await fetch('/api/admin/config', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await resp.json();
+
+        if (result.success) {
+            alert('配置保存成功！');
+        } else {
+            alert('保存失败: ' + (result.error || '未知错误'));
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+// ===== 数据统计 =====
+async function loadStats() {
+    try {
+        if (window.chartReady) await window.chartReady;
+        const [msgResp, sysResp] = await Promise.all([
+            fetch('/api/admin/stats/messages'),
+            fetch('/api/admin/stats/system')
+        ]);
+
+        const msgData = await msgResp.json();
+        const sysData = await sysResp.json();
+
+        document.getElementById('stat-today-messages').textContent = msgData.today_count || 0;
+        document.getElementById('stat-total-messages').textContent = msgData.total_count || 0;
+        document.getElementById('stat-device-count').textContent = sysData.device_count || 0;
+        document.getElementById('stat-uptime').textContent = sysData.uptime_human || '-';
+
+        if (msgData.daily_stats && msgData.daily_stats.length > 0) {
+            drawMessageChart(msgData.daily_stats);
+        }
+
+        if (msgData.type_stats) {
+            drawTypeChart(msgData.type_stats);
+        }
+    } catch (e) {
+        console.error('Load stats error:', e);
+    }
+}
+
+function drawMessageChart(dailyStats) {
+    const ctx = document.getElementById('messageChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailyStats.map(d => d.date),
+            datasets: [{
+                label: '消息数',
+                data: dailyStats.map(d => d.count),
+                borderColor: '#818cf8',
+                backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            }
+        }
+    });
+}
+
+function drawTypeChart(typeStats) {
+    const ctx = document.getElementById('typeChart').getContext('2d');
+    const labels = Object.keys(typeStats);
+    const values = Object.values(typeStats);
+    const typeLabels = { 'text': '文本', 'image': '图片', 'analysis': '分析' };
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.map(l => typeLabels[l] || l),
+            datasets: [{
+                data: values,
+                backgroundColor: ['#818cf8', '#34d399', '#fbbf24', '#f87171']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+</script>
+{% endblock %}
