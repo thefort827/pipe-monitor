@@ -4,6 +4,7 @@ secrets.py
 .env
 .env.local
 .env.production
+.env.railway
 
 # === 数据文件 ===
 *.xlsx
