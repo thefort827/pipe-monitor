@@ -48,7 +48,7 @@ class DataBackfill:
         """)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS fetch_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 started_at TEXT,
                 finished_at TEXT,
                 time_start TEXT,
