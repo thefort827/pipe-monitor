@@ -836,7 +836,7 @@ def health_check():
         from db import get_conn, fetch_one
         conn = get_conn()
         cursor = conn.cursor()
-        
+
         cursor.execute('SELECT COUNT(*) as cnt FROM devices')
         device_count = fetch_one(cursor)['cnt']
         cursor.execute('SELECT COUNT(*) as cnt FROM readings')
@@ -845,11 +845,11 @@ def health_check():
         last_reading = fetch_one(cursor)['last_r']
         cursor.execute('SELECT MAX(recorded_at) as last_w FROM weather_data')
         last_weather = fetch_one(cursor)['last_w']
-        
+
         conn.close()
-        
+
         uptime_seconds = (datetime.now() - app_start_time).total_seconds()
-        
+
         return jsonify({
             'status': 'ok',
             'devices': device_count,
@@ -861,8 +861,16 @@ def health_check():
             'uptime_human': f"{int(uptime_seconds // 3600)}h {int((uptime_seconds % 3600) // 60)}m"
         })
     except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        logger.warning(f"Health check DB query failed (non-critical): {e}")
+        uptime_seconds = (datetime.now() - app_start_time).total_seconds()
+        return jsonify({
+            'status': 'degraded',
+            'message': str(e),
+            'devices': len(data_cache.get('devices', [])),
+            'cache_last_update': data_cache.get('last_update', 'unknown'),
+            'uptime_seconds': int(uptime_seconds),
+            'uptime_human': f"{int(uptime_seconds // 3600)}h {int((uptime_seconds % 3600) // 60)}m"
+        })
 
 
 @app.route('/api/status')
