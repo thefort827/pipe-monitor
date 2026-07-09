@@ -30,6 +30,36 @@ def _rest_get(table, query=''):
         return r.json()
 
 
+def _rest_upsert(table, data):
+    """Insert or update a single record via Supabase REST API"""
+    import requests
+    url = f'{REST_URL}/rest/v1/{table}'
+    headers = {**REST_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates'}
+    try:
+        r = requests.post(url, json=data, headers=headers, timeout=30)
+        r.raise_for_status()
+        return True
+    except Exception as e:
+        logger.warning(f"REST upsert to {table} failed: {e}")
+        return False
+
+
+def _rest_upsert_batch(table, records):
+    """Insert or update multiple records via Supabase REST API"""
+    import requests
+    if not records:
+        return 0
+    url = f'{REST_URL}/rest/v1/{table}'
+    headers = {**REST_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates'}
+    try:
+        r = requests.post(url, json=records, headers=headers, timeout=60)
+        r.raise_for_status()
+        return len(records)
+    except Exception as e:
+        logger.warning(f"REST batch upsert to {table} failed: {e}")
+        return 0
+
+
 def _get_conn():
     """获取数据库连接（PostgreSQL 或 SQLite），PostgreSQL 失败时降级到 SQLite"""
     if config.DB_TYPE == 'postgresql':

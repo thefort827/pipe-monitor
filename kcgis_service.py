@@ -377,8 +377,32 @@ class KCGIService:
             conn.close()
             return synced
         except Exception as e:
-            print(f"DB sync skipped (DB unavailable): {e}")
-            return 0
+            logger.warning(f"Direct DB sync failed, trying REST API: {e}")
+            return self._sync_to_rest_api(kcgis_devices)
+
+    def _sync_to_rest_api(self, kcgis_devices):
+        """Fallback: sync devices via Supabase REST API"""
+        from data_processor import _rest_upsert_batch
+        records = []
+        for device in kcgis_devices:
+            device_id = device.get("device_id")
+            if not device_id:
+                continue
+            records.append({
+                'device_id': device_id,
+                'name': device.get("name", ""),
+                'area_name': '城西片区',
+                'device_type': device.get("device_type", ""),
+                'manufacturers': '沃环科技',
+                'address': '',
+                'longitude': device.get("longitude"),
+                'latitude': device.get("latitude")
+            })
+        if records:
+            synced = _rest_upsert_batch('devices', records)
+            logger.info(f"REST API sync: {synced} devices synced")
+            return synced
+        return 0
 
 
 def test_kcgis_connection():

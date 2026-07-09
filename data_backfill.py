@@ -143,33 +143,57 @@ class DataBackfill:
         if not readings:
             return 0
 
-        conn = self._get_conn()
-        cursor = conn.cursor()
-        inserted = 0
+        try:
+            conn = self._get_conn()
+            cursor = conn.cursor()
+            inserted = 0
+            now_str = datetime.now(BJ_TZ).isoformat()
+
+            for i in range(0, len(readings), config.BACKFILL_BATCH_SIZE):
+                batch = readings[i:i + config.BACKFILL_BATCH_SIZE]
+                try:
+                    cursor.executemany("""
+                        INSERT OR REPLACE INTO readings
+                        (device_id, recorded_at, liquid_level, ammonia_n, cod, voltage,
+                         isonline, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, [
+                        (r.get('device_id'), r.get('recorded_at'),
+                         r.get('liquid_level'), r.get('ammonia_n'),
+                         r.get('cod'), r.get('voltage'),
+                         r.get('isonline', ''), now_str)
+                        for r in batch
+                    ])
+                    inserted += len(batch)
+                except Exception as e:
+                    logger.error("[BACKFILL] Insert batch error: %s", e)
+
+            conn.commit()
+            conn.close()
+            return inserted
+        except Exception as e:
+            logger.warning(f"Direct DB insert failed, trying REST API: {e}")
+            return self._insert_batch_rest(readings)
+
+    def _insert_batch_rest(self, readings):
+        """Fallback: insert readings via Supabase REST API"""
+        from data_processor import _rest_upsert_batch
         now_str = datetime.now(BJ_TZ).isoformat()
-
-        for i in range(0, len(readings), config.BACKFILL_BATCH_SIZE):
-            batch = readings[i:i + config.BACKFILL_BATCH_SIZE]
-            try:
-                cursor.executemany("""
-                    INSERT OR REPLACE INTO readings
-                    (device_id, recorded_at, liquid_level, ammonia_n, cod, voltage,
-                     isonline, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, [
-                    (r.get('device_id'), r.get('recorded_at'),
-                     r.get('liquid_level'), r.get('ammonia_n'),
-                     r.get('cod'), r.get('voltage'),
-                     r.get('isonline', ''), now_str)
-                    for r in batch
-                ])
-                inserted += len(batch)
-            except Exception as e:
-                logger.error("[BACKFILL] Insert batch error: %s", e)
-
-        conn.commit()
-        conn.close()
-        return inserted
+        records = []
+        for r in readings:
+            records.append({
+                'device_id': r.get('device_id'),
+                'recorded_at': r.get('recorded_at'),
+                'liquid_level': r.get('liquid_level'),
+                'ammonia_n': r.get('ammonia_n'),
+                'cod': r.get('cod'),
+                'voltage': r.get('voltage'),
+                'isonline': r.get('isonline', ''),
+                'created_at': now_str
+            })
+        if records:
+            return _rest_upsert_batch('readings', records)
+        return 0
 
     def backfill_full(self, start_date=None):
         """全量历史回填"""
