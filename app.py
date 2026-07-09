@@ -369,6 +369,20 @@ def init_pg_tables():
                 cur.execute("ALTER TABLE readings ALTER COLUMN recorded_at TYPE TIMESTAMP USING recorded_at::TIMESTAMP")
                 conn.commit()
 
+            # Fix weather_data table recorded_at column type
+            try:
+                cur.execute("""
+                    SELECT data_type FROM information_schema.columns
+                    WHERE table_name = 'weather_data' AND column_name = 'recorded_at'
+                """)
+                weather_col_type = cur.fetchone()[0]
+                if weather_col_type != 'timestamp with time zone':
+                    print(f"Fixing weather_data recorded_at type: {weather_col_type} -> timestamp")
+                    cur.execute("ALTER TABLE weather_data ALTER COLUMN recorded_at TYPE TIMESTAMP USING recorded_at::TIMESTAMP")
+                    conn.commit()
+            except:
+                pass
+
             # Clean up data older than 6 months to save space
             try:
                 cur.execute("DELETE FROM readings WHERE recorded_at < NOW() - INTERVAL '6 months'")
