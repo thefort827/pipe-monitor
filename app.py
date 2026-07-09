@@ -361,7 +361,7 @@ def init_pg_tables():
         cur.execute("""
             CREATE TABLE IF NOT EXISTS readings (
                 id SERIAL PRIMARY KEY,
-                device_id TEXT, recorded_at TEXT,
+                device_id TEXT, recorded_at TIMESTAMP,
                 liquid_level REAL, ammonia_n REAL, cod REAL, voltage REAL,
                 isonline TEXT, created_at TEXT, temperature REAL,
                 status INTEGER, threshold_exceed TEXT, getvaluetime TEXT
@@ -377,7 +377,7 @@ def init_pg_tables():
         """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS fetch_log (
-                id SERIAL PRIMARY KEY, started_at TEXT, time_start TEXT, time_end TEXT,
+                id SERIAL PRIMARY KEY, started_at TIMESTAMP, time_start TEXT, time_end TEXT,
                 records_fetched INTEGER DEFAULT 0, records_inserted INTEGER DEFAULT 0,
                 status TEXT, error_msg TEXT
             )
@@ -385,7 +385,7 @@ def init_pg_tables():
         cur.execute("""
             CREATE TABLE IF NOT EXISTS backfill_state (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
-                last_synced_time TEXT, last_run_at TEXT,
+                last_synced_time TIMESTAMP, last_run_at TIMESTAMP,
                 total_fetched INTEGER DEFAULT 0, total_inserted INTEGER DEFAULT 0,
                 status TEXT DEFAULT 'idle'
             )
