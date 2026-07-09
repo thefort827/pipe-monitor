@@ -126,9 +126,10 @@ class DataBackfill:
         conn = self._get_conn()
         cursor = conn.cursor()
         now_str = datetime.now(BJ_TZ).isoformat()
-        cursor.execute("""
+        placeholder = '%s' if config.DB_TYPE == 'postgresql' else '?'
+        cursor.execute(f"""
             INSERT INTO fetch_log (started_at, time_start, time_end, records_fetched, records_inserted, status, error_msg)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
         """, (now_str, str(time_start), str(time_end), fetched, inserted, status, error))
         conn.commit()
         conn.close()
@@ -168,21 +169,37 @@ class DataBackfill:
         # Direct DB insert
         inserted = 0
         now_str = datetime.now(BJ_TZ).isoformat()
+        placeholder = '%s' if config.DB_TYPE == 'postgresql' else '?'
         for i in range(0, len(readings), config.BACKFILL_BATCH_SIZE):
             batch = readings[i:i + config.BACKFILL_BATCH_SIZE]
             try:
-                cursor.executemany("""
-                    INSERT OR REPLACE INTO readings
-                    (device_id, recorded_at, liquid_level, ammonia_n, cod, voltage,
-                     isonline, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, [
-                    (r.get('device_id'), r.get('recorded_at'),
-                     r.get('liquid_level'), r.get('ammonia_n'),
-                     r.get('cod'), r.get('voltage'),
-                     r.get('isonline', ''), now_str)
-                    for r in batch
-                ])
+                if config.DB_TYPE == 'postgresql':
+                    cursor.executemany(f"""
+                        INSERT INTO readings
+                        (device_id, recorded_at, liquid_level, ammonia_n, cod, voltage,
+                         isonline, created_at)
+                        VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+                        ON CONFLICT DO NOTHING
+                    """, [
+                        (r.get('device_id'), r.get('recorded_at'),
+                         r.get('liquid_level'), r.get('ammonia_n'),
+                         r.get('cod'), r.get('voltage'),
+                         r.get('isonline', ''), now_str)
+                        for r in batch
+                    ])
+                else:
+                    cursor.executemany("""
+                        INSERT OR REPLACE INTO readings
+                        (device_id, recorded_at, liquid_level, ammonia_n, cod, voltage,
+                         isonline, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, [
+                        (r.get('device_id'), r.get('recorded_at'),
+                         r.get('liquid_level'), r.get('ammonia_n'),
+                         r.get('cod'), r.get('voltage'),
+                         r.get('isonline', ''), now_str)
+                        for r in batch
+                    ])
                 inserted += len(batch)
             except Exception as e:
                 logger.error("[BACKFILL] Insert batch error: %s", e)
