@@ -41,7 +41,7 @@ class DataBackfill:
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS backfill_state (
-                id INTEGER PRIMARY KEY,
+                id SERIAL PRIMARY KEY,
                 last_synced_time TEXT,
                 last_run_at TEXT,
                 total_fetched INTEGER DEFAULT 0,
