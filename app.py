@@ -369,13 +369,13 @@ def init_pg_tables():
                 cur.execute("ALTER TABLE readings ALTER COLUMN recorded_at TYPE TIMESTAMP USING recorded_at::TIMESTAMP")
                 conn.commit()
 
-            # Clean up data older than 1 year to save space
+            # Clean up data older than 6 months to save space
             try:
-                cur.execute("DELETE FROM readings WHERE recorded_at < NOW() - INTERVAL '1 year'")
+                cur.execute("DELETE FROM readings WHERE recorded_at < NOW() - INTERVAL '6 months'")
                 deleted = cur.rowcount
                 conn.commit()
                 if deleted > 0:
-                    print(f"Cleaned up {deleted} old readings (>1 year)")
+                    print(f"Cleaned up {deleted} old readings (>6 months)")
             except Exception as e:
                 print(f"Cleanup error: {e}")
         else:
