@@ -6,8 +6,11 @@ import requests
 import sqlite3
 import json
 import hashlib
+import logging
 from datetime import datetime
 import config
+
+logger = logging.getLogger(__name__)
 
 try:
     import config_secrets as _secrets
