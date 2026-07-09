@@ -971,6 +971,88 @@ def health_check():
         })
 
 
+@app.route('/api/backfill-status')
+def backfill_status():
+    """Data backfill progress endpoint"""
+    try:
+        from db import get_conn, fetch_one, fetch_all
+        conn = get_conn()
+        cursor = conn.cursor()
+
+        # Get readings count
+        cursor.execute('SELECT COUNT(*) as cnt FROM readings')
+        readings_count = fetch_one(cursor)['cnt']
+
+        # Get latest reading time
+        cursor.execute('SELECT MAX(recorded_at) as last_r FROM readings')
+        last_reading = fetch_one(cursor)['last_r']
+
+        # Get backfill state
+        try:
+            cursor.execute('SELECT * FROM backfill_state ORDER BY id DESC LIMIT 1')
+            state = fetch_one(cursor)
+        except:
+            state = None
+
+        # Get fetch log (last 10 entries)
+        try:
+            cursor.execute('SELECT * FROM fetch_log ORDER BY id DESC LIMIT 10')
+            logs = fetch_all(cursor, conn)
+        except:
+            logs = []
+
+        conn.close()
+
+        # Calculate progress
+        start_date = datetime(2023, 12, 15)
+        now = datetime.now()
+        total_days = (now - start_date).days
+
+        if last_reading:
+            if isinstance(last_reading, str):
+                try:
+                    last_dt = datetime.fromisoformat(last_reading.replace('Z', '+00:00').replace('+00:00', ''))
+                except:
+                    last_dt = start_date
+            else:
+                last_dt = last_reading
+            covered_days = (last_dt - start_date).days
+        else:
+            covered_days = 0
+
+        progress_pct = round(covered_days / total_days * 100, 1) if total_days > 0 else 0
+
+        return jsonify({
+            'readings_count': readings_count,
+            'last_reading': str(last_reading) if last_reading else None,
+            'backfill_state': {
+                'last_synced_time': str(state.get('last_synced_time')) if state else None,
+                'last_run_at': str(state.get('last_run_at')) if state else None,
+                'total_fetched': state.get('total_fetched', 0) if state else 0,
+                'total_inserted': state.get('total_inserted', 0) if state else 0,
+                'status': state.get('status', 'unknown') if state else 'unknown'
+            } if state else None,
+            'progress': {
+                'start_date': '2023-12-15',
+                'total_days': total_days,
+                'covered_days': covered_days,
+                'progress_pct': progress_pct,
+                'estimated_hours_remaining': max(0, round((100 - progress_pct) / 10, 1))
+            },
+            'recent_logs': [{
+                'time_start': str(l.get('time_start', '')),
+                'time_end': str(l.get('time_end', '')),
+                'fetched': l.get('records_fetched', 0),
+                'inserted': l.get('records_inserted', 0),
+                'status': l.get('status', ''),
+                'error': l.get('error_msg', '')
+            } for l in logs] if logs else []
+        })
+    except Exception as e:
+        logger.error(f"Backfill status error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/status')
 def system_status():
     """System status endpoint showing scheduler and cache info"""
