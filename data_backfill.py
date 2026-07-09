@@ -36,8 +36,11 @@ class DataBackfill:
     def _ensure_tables(self):
         conn = self._get_conn()
         cursor = conn.cursor()
-        # Use appropriate placeholder for database type
         placeholder = '%s' if config.DB_TYPE == 'postgresql' else '?'
+
+        if config.DB_TYPE == 'postgresql':
+            # Drop and recreate backfill_state with SERIAL
+            cursor.execute("DROP TABLE IF EXISTS backfill_state CASCADE")
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS backfill_state (
