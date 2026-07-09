@@ -333,7 +333,7 @@ def refresh_backfill_data():
 
 # Schedule periodic tasks
 scheduler.add_job(refresh_device_data, 'interval', hours=1, id='device_refresh')
-scheduler.add_job(refresh_weather_data, 'interval', hours=6, id='weather_refresh')
+scheduler.add_job(refresh_weather_data, 'interval', minutes=30, id='weather_refresh')
 scheduler.add_job(refresh_ai_report, 'interval', hours=1, id='ai_report_refresh')
 scheduler.add_job(refresh_backfill_data, 'interval', minutes=10, id='backfill_refresh')
 scheduler.add_job(refresh_and_push_hourly_report, 'interval', hours=1, id='hourly_report_push')
