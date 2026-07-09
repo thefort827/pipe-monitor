@@ -76,8 +76,8 @@ def save_to_database(lat, lon, precip_data):
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS weather_data (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                recorded_at TEXT,
+                id SERIAL PRIMARY KEY,
+                recorded_at TIMESTAMP,
                 latitude REAL,
                 longitude REAL,
                 rainfall_mm REAL,
