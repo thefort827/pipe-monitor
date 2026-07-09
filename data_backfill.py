@@ -36,6 +36,9 @@ class DataBackfill:
     def _ensure_tables(self):
         conn = self._get_conn()
         cursor = conn.cursor()
+        # Use appropriate placeholder for database type
+        placeholder = '%s' if config.DB_TYPE == 'postgresql' else '?'
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS backfill_state (
                 id INTEGER PRIMARY KEY,
@@ -84,18 +87,19 @@ class DataBackfill:
         cursor = conn.cursor()
         existing = self._get_state()
         now_str = datetime.now(BJ_TZ).isoformat()
+        placeholder = '%s' if config.DB_TYPE == 'postgresql' else '?'
         if existing:
-            cursor.execute("""
+            cursor.execute(f"""
                 UPDATE backfill_state
-                SET last_synced_time=?, last_run_at=?, total_fetched=?, total_inserted=?, status=?
-                WHERE id=?
+                SET last_synced_time={placeholder}, last_run_at={placeholder}, total_fetched={placeholder}, total_inserted={placeholder}, status={placeholder}
+                WHERE id={placeholder}
             """, (state.get('last_synced_time'), now_str,
                   state.get('total_fetched', 0), state.get('total_inserted', 0),
                   state.get('status', 'idle'), existing['id']))
         else:
-            cursor.execute("""
+            cursor.execute(f"""
                 INSERT INTO backfill_state (last_synced_time, last_run_at, total_fetched, total_inserted, status)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
             """, (state.get('last_synced_time'), now_str,
                   state.get('total_fetched', 0), state.get('total_inserted', 0),
                   state.get('status', 'idle')))
