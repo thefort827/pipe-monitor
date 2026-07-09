@@ -53,6 +53,27 @@ def _rest_upsert_batch(table, records):
     headers = {**REST_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates'}
     try:
         r = requests.post(url, json=records, headers=headers, timeout=60)
+        if r.status_code == 409:
+            # Conflict - try upserting one by one with explicit conflict handling
+            success = 0
+            for record in records:
+                try:
+                    # Try insert first
+                    r2 = requests.post(url, json=record, headers={**headers, 'Prefer': 'return=minimal'}, timeout=30)
+                    if r2.status_code in (200, 201):
+                        success += 1
+                    elif r2.status_code == 409:
+                        # Already exists, try update via PATCH
+                        pk_field = 'device_id' if table == 'devices' else 'id'
+                        pk_value = record.get(pk_field)
+                        if pk_value:
+                            update_url = f"{url}?{pk_field}=eq.{pk_value}"
+                            r3 = requests.patch(update_url, json=record, headers={**headers, 'Prefer': 'return=minimal'}, timeout=30)
+                            if r3.status_code in (200, 204):
+                                success += 1
+                except:
+                    pass
+            return success
         r.raise_for_status()
         return len(records)
     except Exception as e:
