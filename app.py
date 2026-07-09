@@ -402,7 +402,7 @@ def init_pg_tables():
             cur.execute("CREATE INDEX idx_readings_device ON readings(device_id, recorded_at DESC)")
             cur.execute("""
                 CREATE TABLE weather_data (
-                    id SERIAL PRIMARY KEY, recorded_at TEXT,
+                    id SERIAL PRIMARY KEY, recorded_at TIMESTAMP,
                     latitude REAL, longitude REAL, rainfall_mm REAL,
                     temp_c REAL, humidity INTEGER, source TEXT, created_at TEXT
                 )
