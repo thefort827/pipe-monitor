@@ -340,16 +340,20 @@ scheduler.add_job(refresh_and_push_hourly_report, 'interval', hours=1, id='hourl
 
 
 def init_pg_tables():
-    """如果使用 PostgreSQL，确保表结构存在"""
+    """如果使用 PostgreSQL，确保表结构存在（DROP 旧表重建）"""
     if config.DB_TYPE != 'postgresql':
         return
     try:
         from db import get_conn
         conn = get_conn()
         cur = conn.cursor()
-        
+
+        # Drop existing tables to recreate with correct schema
+        for table in ['readings', 'devices', 'weather_data', 'fetch_log', 'backfill_state', 'pipe_nodes', 'pipe_segments']:
+            cur.execute(f"DROP TABLE IF EXISTS {table} CASCADE")
+
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS devices (
+            CREATE TABLE devices (
                 id SERIAL PRIMARY KEY,
                 device_id TEXT UNIQUE,
                 name TEXT, area_name TEXT, device_type TEXT,
@@ -359,7 +363,7 @@ def init_pg_tables():
             )
         """)
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS readings (
+            CREATE TABLE readings (
                 id SERIAL PRIMARY KEY,
                 device_id TEXT, recorded_at TIMESTAMP,
                 liquid_level REAL, ammonia_n REAL, cod REAL, voltage REAL,
@@ -367,23 +371,23 @@ def init_pg_tables():
                 status INTEGER, threshold_exceed TEXT, getvaluetime TEXT
             )
         """)
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_readings_device ON readings(device_id, recorded_at DESC)")
+        cur.execute("CREATE INDEX idx_readings_device ON readings(device_id, recorded_at DESC)")
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS weather_data (
+            CREATE TABLE weather_data (
                 id SERIAL PRIMARY KEY, recorded_at TEXT,
                 latitude REAL, longitude REAL, rainfall_mm REAL,
                 temp_c REAL, humidity INTEGER, source TEXT, created_at TEXT
             )
         """)
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS fetch_log (
+            CREATE TABLE fetch_log (
                 id SERIAL PRIMARY KEY, started_at TIMESTAMP, time_start TEXT, time_end TEXT,
                 records_fetched INTEGER DEFAULT 0, records_inserted INTEGER DEFAULT 0,
                 status TEXT, error_msg TEXT
             )
         """)
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS backfill_state (
+            CREATE TABLE backfill_state (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
                 last_synced_time TIMESTAMP, last_run_at TIMESTAMP,
                 total_fetched INTEGER DEFAULT 0, total_inserted INTEGER DEFAULT 0,
@@ -391,7 +395,7 @@ def init_pg_tables():
             )
         """)
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS pipe_nodes (
+            CREATE TABLE pipe_nodes (
                 id SERIAL PRIMARY KEY, point_id TEXT UNIQUE,
                 pipe_type TEXT, sub_type TEXT, feature TEXT,
                 ground_elev REAL, well_bottom_elev REAL, depth REAL,
@@ -399,15 +403,15 @@ def init_pg_tables():
             )
         """)
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS pipe_segments (
+            CREATE TABLE pipe_segments (
                 id SERIAL PRIMARY KEY, start_id TEXT, end_id TEXT,
                 sub_type TEXT, diameter TEXT, length REAL
             )
         """)
-        
+
         conn.commit()
         conn.close()
-        print("PostgreSQL tables initialized")
+        print("PostgreSQL tables initialized (recreated)")
     except Exception as e:
         print(f"PostgreSQL table init error: {e}")
 
