@@ -9,6 +9,7 @@ secrets.py
 *.xlsx
 *.xls
 *.db
+!城西闪传_修复版_去重.xlsx
 *.db-journal
 *.db-wal
 *.db-shm
