@@ -343,42 +343,57 @@ class KCGIService:
     def sync_to_database(self, kcgis_devices):
         if not kcgis_devices:
             return 0
+
+        # Check if we can use direct DB
+        use_rest = False
         try:
             from db import get_conn
             conn = get_conn()
             cursor = conn.cursor()
-            synced = 0
-            for device in kcgis_devices:
-                device_id = device.get("device_id")
-                if not device_id:
-                    continue
-                name = device.get("name", "")
-                longitude = device.get("longitude")
-                latitude = device.get("latitude")
-                device_type = device.get("device_type", "")
-                try:
-                    if config.DB_TYPE == 'postgresql':
-                        cursor.execute("""
-                            INSERT INTO devices (device_id, name, area_name, device_type, manufacturers, address, longitude, latitude)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                            ON CONFLICT (device_id) DO UPDATE SET name=EXCLUDED.name, longitude=EXCLUDED.longitude, latitude=EXCLUDED.latitude
-                        """, (device_id, name, "城西片区", device_type, "沃环科技", "", longitude, latitude))
-                    else:
-                        cursor.execute("""
-                            INSERT OR REPLACE INTO devices
-                            (device_id, name, area_name, device_type, manufacturers, address,
-                             longitude, latitude, updated_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """, (device_id, name, "城西片区", device_type, "沃环科技", "", longitude, latitude, datetime.now().isoformat()))
-                    synced += 1
-                except Exception as e:
-                    print(f"Sync device {device_id} error: {e}")
-            conn.commit()
-            conn.close()
-            return synced
+            # Test if table exists
+            cursor.execute("SELECT 1 FROM devices LIMIT 1")
+            cursor.fetchone()
         except Exception as e:
-            logger.warning(f"Direct DB sync failed, trying REST API: {e}")
+            if 'no such table' in str(e).lower():
+                use_rest = True
+            else:
+                use_rest = True
+
+        if use_rest:
+            logger.info("[KCGIS] Using REST API for device sync")
             return self._sync_to_rest_api(kcgis_devices)
+
+        # Direct DB sync
+        synced = 0
+        for device in kcgis_devices:
+            device_id = device.get("device_id")
+            if not device_id:
+                continue
+            name = device.get("name", "")
+            longitude = device.get("longitude")
+            latitude = device.get("latitude")
+            device_type = device.get("device_type", "")
+            try:
+                if config.DB_TYPE == 'postgresql':
+                    cursor.execute("""
+                        INSERT INTO devices (device_id, name, area_name, device_type, manufacturers, address, longitude, latitude)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (device_id) DO UPDATE SET name=EXCLUDED.name, longitude=EXCLUDED.longitude, latitude=EXCLUDED.latitude
+                    """, (device_id, name, "城西片区", device_type, "沃环科技", "", longitude, latitude))
+                else:
+                    cursor.execute("""
+                        INSERT OR REPLACE INTO devices
+                        (device_id, name, area_name, device_type, manufacturers, address,
+                         longitude, latitude, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (device_id, name, "城西片区", device_type, "沃环科技", "", longitude, latitude, datetime.now().isoformat()))
+                synced += 1
+            except Exception as e:
+                print(f"Sync device {device_id} error: {e}")
+
+        conn.commit()
+        conn.close()
+        return synced
 
     def _sync_to_rest_api(self, kcgis_devices):
         """Fallback: sync devices via Supabase REST API"""

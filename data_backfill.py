@@ -143,37 +143,49 @@ class DataBackfill:
         if not readings:
             return 0
 
+        # Check if we can use direct DB
+        use_rest = False
         try:
             conn = self._get_conn()
             cursor = conn.cursor()
-            inserted = 0
-            now_str = datetime.now(BJ_TZ).isoformat()
-
-            for i in range(0, len(readings), config.BACKFILL_BATCH_SIZE):
-                batch = readings[i:i + config.BACKFILL_BATCH_SIZE]
-                try:
-                    cursor.executemany("""
-                        INSERT OR REPLACE INTO readings
-                        (device_id, recorded_at, liquid_level, ammonia_n, cod, voltage,
-                         isonline, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """, [
-                        (r.get('device_id'), r.get('recorded_at'),
-                         r.get('liquid_level'), r.get('ammonia_n'),
-                         r.get('cod'), r.get('voltage'),
-                         r.get('isonline', ''), now_str)
-                        for r in batch
-                    ])
-                    inserted += len(batch)
-                except Exception as e:
-                    logger.error("[BACKFILL] Insert batch error: %s", e)
-
-            conn.commit()
-            conn.close()
-            return inserted
+            # Test if table exists
+            cursor.execute("SELECT 1 FROM readings LIMIT 1")
+            cursor.fetchone()
         except Exception as e:
-            logger.warning(f"Direct DB insert failed, trying REST API: {e}")
+            if 'no such table' in str(e).lower():
+                use_rest = True
+            else:
+                use_rest = True
+
+        if use_rest:
+            logger.info("[BACKFILL] Using REST API for readings insert")
             return self._insert_batch_rest(readings)
+
+        # Direct DB insert
+        inserted = 0
+        now_str = datetime.now(BJ_TZ).isoformat()
+        for i in range(0, len(readings), config.BACKFILL_BATCH_SIZE):
+            batch = readings[i:i + config.BACKFILL_BATCH_SIZE]
+            try:
+                cursor.executemany("""
+                    INSERT OR REPLACE INTO readings
+                    (device_id, recorded_at, liquid_level, ammonia_n, cod, voltage,
+                     isonline, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, [
+                    (r.get('device_id'), r.get('recorded_at'),
+                     r.get('liquid_level'), r.get('ammonia_n'),
+                     r.get('cod'), r.get('voltage'),
+                     r.get('isonline', ''), now_str)
+                    for r in batch
+                ])
+                inserted += len(batch)
+            except Exception as e:
+                logger.error("[BACKFILL] Insert batch error: %s", e)
+
+        conn.commit()
+        conn.close()
+        return inserted
 
     def _insert_batch_rest(self, readings):
         """Fallback: insert readings via Supabase REST API"""
